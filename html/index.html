@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<body>
+<div style="margin: 2em;" id="out"></div>
+<script>
+(function () {
+  
+  let xhttp = new XMLHttpRequest();
+  xhttp.open("GET", "/lua/stream", true);
+  xhttp.send();
+  let div = document.getElementById("out")
+  let total_len = 0
+  let check_resp = function () {
+    let resp = xhttp.responseText
+    let len = resp.length
+    if (len > total_len) {
+      let new_data = resp.substring(total_len, len)
+      total_len = len;
+      div.innerHTML += new_data + "<br/>"
+    }
+  };
+
+  let timer = setInterval(check_resp, 1000);
+  check_resp();
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4) {
+      check_resp();
+      clearInterval(timer);
+      div.innerHTML += "done<br/>";
+    }
+  };
+})();
+</script>
+</body>
+</html>
