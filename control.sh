@@ -1,10 +1,7 @@
 #!/bin/bash
 
 CURRDIR=$(dirname "$0")
-BASEDIR=$(
-  cd "$CURRDIR" || return
-  pwd
-)
+BASEDIR=$(cd "$CURRDIR" || return;pwd)
 NAME="openresty"
 CMD=/usr/local/bin/openresty
 if [ "$1" = "-d" ]; then
@@ -35,15 +32,16 @@ PID_FILE="$EXECUTEDIR"/logs/${NAME}.pid
 
 check_pid() {
   STOPED=1
-  if [ -f ${PID_FILE} ]; then
-    PID=$(cat $PID_FILE)
+  if [ -f "${PID_FILE}" ]; then
+    PID=$(cat "$PID_FILE")
     if [[ $(uname) == 'Darwin' ]]; then
-      vmmap $PID &>/dev/null
+      if vmmap "$PID" &>/dev/null; then
+        STOPED=0
+      fi
     else
-      ls /proc/$PID &>/dev/null
-    fi
-    if [ $? -eq 0 ]; then
-      STOPED=0
+      if ls /proc/"$PID" &>/dev/null; then
+        STOPED=0
+      fi
     fi
   fi
 }
@@ -59,13 +57,12 @@ check_running() {
 start() {
   check_running
   if [ $STOPED -eq 1 ]; then
-    "$CMD" -c "$EXECUTEDIR/conf/nginx.conf" -p "$EXECUTEDIR/"
-    if [ $? -eq 0 ]; then
-      PID=$(cat $PID_FILE)
-      echo "nginx (pid $PID) is running..."
-    else
+    if !  "$CMD" -c "$EXECUTEDIR/conf/nginx.conf" -p "$EXECUTEDIR/"; then
       echo "nginx start fails"
       exit 1
+    else
+      PID=$(cat "$PID_FILE")
+      echo "nginx (pid $PID) is running..."
     fi
   fi
 }
@@ -73,12 +70,11 @@ start() {
 stop() {
   check_pid
   if [ $STOPED -eq 0 ]; then
-    "$CMD" -c "$EXECUTEDIR/conf/nginx.conf" -p "$EXECUTEDIR/" -s stop
-    if [ $? -eq 0 ]; then
-      echo "nginx shutting down is done..."
-    else
+    if !  "$CMD" -c "$EXECUTEDIR/conf/nginx.conf" -p "$EXECUTEDIR/" -s stop; then
       echo "nginx stop fails"
       exit 1
+    else
+      echo "nginx shutting down is done..."
     fi
   else
     echo "nginx is not running"
@@ -95,8 +91,7 @@ status() {
 }
 
 reload() {
-  "$CMD" -c "$EXECUTEDIR/conf/nginx.conf" -p "$EXECUTEDIR/" -t
-  if [ $? -ne 0 ]; then
+  if ! "$CMD" -c "$EXECUTEDIR/conf/nginx.conf" -p "$EXECUTEDIR/" -t; then
     echo "test nginx conf fail. please check it first, we won't reload it"
     exit 1
   fi
