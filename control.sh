@@ -4,6 +4,7 @@ CURRDIR=$(dirname "$0")
 BASEDIR=$(cd "$CURRDIR" || return;pwd)
 NAME="openresty"
 CMD=/usr/local/bin/openresty
+# CMD=/usr/local/bin/nginx
 if [ "$1" = "-d" ]; then
   shift
   EXECUTEDIR=$1
